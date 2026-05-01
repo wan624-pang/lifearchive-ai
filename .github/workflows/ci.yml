@@ -1,0 +1,52 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  backend:
+    name: Backend Tests
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Install dependencies
+        run: |
+          cd apps/api
+          pip install -r requirements.txt
+      - name: Verify imports
+        run: |
+          cd apps/api
+          python -c "from main import app; print('FastAPI app loaded OK')"
+      - name: Test health endpoint
+        run: |
+          cd apps/api
+          python -m uvicorn main:app --host 0.0.0.0 --port 8000 &
+          sleep 3
+          curl -sf http://localhost:8000/api/health | grep -q "ok"
+
+  frontend:
+    name: Frontend Build
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+      - name: Install dependencies
+        run: |
+          cd apps/web
+          npm ci
+      - name: Type check
+        run: |
+          cd apps/web
+          npx next lint
+      - name: Build
+        run: |
+          cd apps/web
+          NEXT_PUBLIC_API_URL=http://localhost:8000 npm run build
