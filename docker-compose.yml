@@ -10,6 +10,7 @@ services:
     environment:
       - AI_PROVIDER=mock
       - DATABASE_URL=sqlite:///./lifearchive.db
+      - CORS_ORIGINS=http://localhost:3000
     volumes:
       - ./apps/api/uploads:/app/uploads
       - ./examples:/app/examples
@@ -21,6 +22,6 @@ services:
     ports:
       - "3000:3000"
     environment:
-      - NEXT_PUBLIC_API_URL=http://api:8000
+      - NEXT_PUBLIC_API_URL=http://localhost:8000
     depends_on:
       - api

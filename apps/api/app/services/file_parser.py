@@ -24,12 +24,15 @@ SUPPORTED_EXTENSIONS = {
 def extract_zip(zip_path: str, extract_to: str) -> list[str]:
     """Extract ZIP file and return list of extracted file paths."""
     extracted = []
+    target_dir = Path(extract_to).resolve()
     with zipfile.ZipFile(zip_path, "r") as zf:
-        zf.extractall(extract_to)
-        for name in zf.namelist():
-            full_path = os.path.join(extract_to, name)
-            if os.path.isfile(full_path):
-                extracted.append(full_path)
+        for member in zf.infolist():
+            destination = (target_dir / member.filename).resolve()
+            if target_dir != destination and target_dir not in destination.parents:
+                raise ValueError(f"Unsafe ZIP entry path: {member.filename}")
+            zf.extract(member, target_dir)
+            if destination.is_file():
+                extracted.append(str(destination))
     return extracted
 
 
